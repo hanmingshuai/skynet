@@ -132,7 +132,7 @@ skynet_module_query(const char * name) {
 void * 
 skynet_module_instance_create(struct skynet_module *m) {
 	if (m->create) {
-		return m->create();
+		return m->create();		// 调用c模块的create
 	} else {
 		return (void *)(intptr_t)(~0);
 	}

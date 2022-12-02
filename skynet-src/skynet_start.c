@@ -232,6 +232,7 @@ start(int thread) {
 
 static void
 bootstrap(struct skynet_context * logger, const char * cmdline) {
+	// 启动一个引导服务，默认情况下name为snlua，args为bootstrap.lua这个脚本
 	int sz = strlen(cmdline);
 	char name[sz+1];
 	char args[sz+1];
@@ -246,6 +247,7 @@ bootstrap(struct skynet_context * logger, const char * cmdline) {
 	} else {
 		args[0] = '\0';
 	}
+	// 创建服务
 	struct skynet_context *ctx = skynet_context_new(name, args);
 	if (ctx == NULL) {
 		skynet_error(NULL, "Bootstrap error : %s\n", cmdline);
@@ -256,26 +258,27 @@ bootstrap(struct skynet_context * logger, const char * cmdline) {
 
 void 
 skynet_start(struct skynet_config * config) {
-	// register SIGHUP for log file reopen
+	// register SIGHUP for log file reopen  
+	// 这里处理一些信号的问题。
 	struct sigaction sa;
 	sa.sa_handler = &handle_hup;
 	sa.sa_flags = SA_RESTART;
 	sigfillset(&sa.sa_mask);
 	sigaction(SIGHUP, &sa, NULL);
-
+	//看看是否配置了守护进程
 	if (config->daemon) {
 		if (daemon_init(config->daemon)) {
 			exit(1);
 		}
 	}
-	skynet_harbor_init(config->harbor);
-	skynet_handle_init(config->harbor);
-	skynet_mq_init();
-	skynet_module_init(config->module_path);
-	skynet_timer_init();
-	skynet_socket_init();
+	skynet_harbor_init(config->harbor);			// harbor(港口)初始化
+	skynet_handle_init(config->harbor);			// handler初始化，存贮全部的服务句柄
+	skynet_mq_init();							// 全局队列初始化
+	skynet_module_init(config->module_path);	// C模块初始化
+	skynet_timer_init();						// 定时器初始化
+	skynet_socket_init();						// socket初始化
 	skynet_profile_enable(config->profile);
-
+	//启动logger服务
 	struct skynet_context *ctx = skynet_context_new(config->logservice, config->logger);
 	if (ctx == NULL) {
 		fprintf(stderr, "Can't launch %s service\n", config->logservice);
@@ -283,9 +286,9 @@ skynet_start(struct skynet_config * config) {
 	}
 
 	skynet_handle_namehandle(skynet_context_handle(ctx), "logger");
-
+	//启动配置中的bootstrap服务
 	bootstrap(ctx, config->bootstrap);
-
+	//调用start传入配置线程数量
 	start(config->thread);
 
 	// harbor_exit may call socket send, so it should exit before socket_free

@@ -470,10 +470,14 @@ snlua_init(struct snlua *l, struct skynet_context *ctx, const char * args) {
 	int sz = strlen(args);
 	char * tmp = skynet_malloc(sz);
 	memcpy(tmp, args, sz);
+	//给需要初始化的服务设置回调函数为上面的luanch_cb
 	skynet_callback(ctx, l , launch_cb);
 	const char * self = skynet_command(ctx, "REG", NULL);
 	uint32_t handle_id = strtoul(self+1, NULL, 16);
 	// it must be first message
+	// 给服务发送消息触发上面的launch_cb
+    // 这里先知道触发上面，具体的消息处理我们的分析会说明
+    // 给服务发送消息之后，具体的服务是怎么去处理的
 	skynet_send(ctx, 0, handle_id, PTYPE_TAG_DONTCOPY,0, tmp, sz);
 	return 0;
 }
@@ -504,7 +508,7 @@ snlua_create(void) {
 	memset(l,0,sizeof(*l));
 	l->mem_report = MEMORY_WARNING_REPORT;
 	l->mem_limit = 0;
-	l->L = lua_newstate(lalloc, l);
+	l->L = lua_newstate(lalloc, l);		// 这里构建了新的lua虚拟机
 	l->activeL = NULL;
 	ATOM_INIT(&l->trap , 0);
 	return l;

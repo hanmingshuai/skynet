@@ -125,8 +125,8 @@ main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	skynet_globalinit();
-	skynet_env_init();
+	skynet_globalinit();	//全局数据的一些初始化
+	skynet_env_init();		//环境初始化
 
 	sigign();
 
@@ -136,7 +136,7 @@ main(int argc, char *argv[]) {
 	// init the lock of code cache
 	luaL_initcodecache();
 #endif
-
+	//打开一个lua虚拟机用于解析传入的配置
 	struct lua_State *L = luaL_newstate();
 	luaL_openlibs(L);	// link lua lib
 
@@ -150,7 +150,7 @@ main(int argc, char *argv[]) {
 		lua_close(L);
 		return 1;
 	}
-	_init_env(L);
+	_init_env(L); //初始化环境
 
 	config.thread =  optint("thread",8);
 	config.module_path = optstring("cpath","./cservice/?.so");
@@ -160,9 +160,9 @@ main(int argc, char *argv[]) {
 	config.logger = optstring("logger", NULL);
 	config.logservice = optstring("logservice", "logger");
 	config.profile = optboolean("profile", 1);
-
+	//解析完，关闭用于解析的lua虚拟机
 	lua_close(L);
-
+	//通过配置启动调用skynet_start
 	skynet_start(&config);
 	skynet_globalexit();
 

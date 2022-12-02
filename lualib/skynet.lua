@@ -860,6 +860,8 @@ function skynet.dispatch_message(...)
 end
 
 function skynet.newservice(name, ...)
+	-- 这个参数 "LAUNCH", "snlua", name, ...特别注意一下
+    -- 最后也是用调用snlua去启动一个lua服务
 	return skynet.call(".launcher", "lua" , "LAUNCH", "snlua", name, ...)
 end
 

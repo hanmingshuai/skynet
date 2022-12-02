@@ -123,11 +123,14 @@ drop_message(struct skynet_message *msg, void *ud) {
 
 struct skynet_context * 
 skynet_context_new(const char * name, const char *param) {
+	//先查询snlua模块，这是一个C写的服务，在skynet_start.c中
+    //skynet_statc方法，skynet_module_init(config->module_path)进行初始化
 	struct skynet_module * mod = skynet_module_query(name);
 
 	if (mod == NULL)
 		return NULL;
 
+	//这里创建一个新的lua虚拟机，所以会有各个服务的隔离
 	void *inst = skynet_module_instance_create(mod);
 	if (inst == NULL)
 		return NULL;
@@ -157,6 +160,7 @@ skynet_context_new(const char * name, const char *param) {
 	context_inc();
 
 	CHECKCALLING_BEGIN(ctx)
+	//这里使用snlua，启动传入的bootstrap.lua
 	int r = skynet_module_instance_init(mod, inst, ctx, param);
 	CHECKCALLING_END(ctx)
 	if (r == 0) {
